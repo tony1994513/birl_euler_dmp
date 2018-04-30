@@ -2,7 +2,18 @@ import numpy as np
 from tf.transformations import euler_from_quaternion, quaternion_from_euler,unit_vector
 from math import ceil
 
-def quat_to_euler(data):
+def quat_to_euler_point(data):
+    '''
+    data: a point 
+    '''
+    quat = data[3:7]
+    pos = data[0:3]
+
+    euler = euler_from_quaternion(quat)       
+    stack = np.hstack((pos,euler))
+    return stack
+
+def quat_to_euler_list(data):
     '''
     data: numpy matrix
     '''
@@ -18,7 +29,7 @@ def quat_to_euler(data):
     stack = np.hstack((p_list,euler_list))
     return stack
 
-def euler_to_quat(data):
+def euler_to_quat_list(data):
     euler_list = data[:,3:6]
     p_list = data[:,0:3]
     quat_list = []

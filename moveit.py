@@ -7,7 +7,6 @@ from moveit_commander import MoveGroupCommander
 from geometry_msgs.msg import Pose
 from copy import deepcopy
 import ik
-import moveit_msgs.msg
 import numpy as np
 
 class MoveItDemo:
@@ -24,51 +23,55 @@ class MoveItDemo:
         # Allow replanning to increase the odds of a solution
         right_arm.allow_replanning(True)
 
-        display_trajectory_publisher = rospy.Publisher(
-                                    '/move_group/display_planned_path',
-                                    moveit_msgs.msg.DisplayTrajectory)
+        # Allow some leeway in position(meters) and orientation (radians)
+        # right_arm.set_goal_position_tolerance(0.01)
+        # right_arm.set_goal_orientation_tolerance(0.1)
+        
+        # Get the name of the end-effector link
+        # end_effector_link = right_arm.get_end_effector_link()
+        
+        # Get the current pose so we can add it as a waypoint
+        # start_pose = right_arm.get_current_pose(end_effector_link).pose
+                
+        # Initialize the waypoints list
         waypoints = []
-        tmp = np.load("valid_pose.npy")
-        for i in tmp:
+        valid_pose = np.load("valid_pose.npy")
+        for i in valid_pose:
              waypoints.append(i.pose)
                 
-
-       
-        print "============ Generating plan 1"
-        pose_target = Pose()
-        pose_target = waypoints[0]
-
-        right_arm.set_pose_target(pose_target)
-        right_arm.go(wait=True)
+        no_pros_data = np.load("dmp_euler_traj.npy")
+        pose_list = []
+        for idx in no_pros_data:
+            pose = Pose()
+            pose.position.x = idx[0]
+            pose.position.y = idx[1]
+            pose.position.z = idx[2]
+            pose.orientation.x= idx[3]
+            pose.orientation.y= idx[4]
+            pose.orientation.z= idx[5]
+            pose.orientation.w= idx[6]
+            pose_list.append(pose)
+        # Set the internal state to the current state
+        right_arm.set_start_state_to_current_state()
 
         (plan, fraction) = right_arm.compute_cartesian_path (
-                                    waypoints,   # waypoint poses
+                                    pose_list,   # waypoint poses
                                     0.01,        # eef_step
                                     0.0        # jump_threshold
                                      )        # avoid_collisions
-        print "============ Visualizing plan1"
-        display_trajectory = moveit_msgs.msg.DisplayTrajectory()
-
-        display_trajectory.trajectory_start = robot.get_current_state()
-        display_trajectory.trajectory.append(plan)
-        display_trajectory_publisher.publish(display_trajectory);
-        rospy.sleep(2)
+                                                                                                                                            
         print "fraction is %s" %fraction
 
-        rospy.on_shutdown(my_hook)
-        #raw_input()
-        
         right_arm.execute(plan)
                         
 
         
-        # Shut down MoveIt cleanly
+        # Shut down MoveIt cleanly                                                                                                                                                                                                                                                                                                                                                                              
         moveit_commander.roscpp_shutdown()
         
-        # Exit MoveIt
+        # Exit MoveIt                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
         moveit_commander.os._exit(0)
-def my_hook():
-    print "shut down nodes"
+
 if __name__ == "__main__":
     MoveItDemo()
 

@@ -8,7 +8,7 @@ import numpy as np
 
 def main():
    
-    data = np.load("dmp_quat_traj.npy")
+    data = np.load("dmp_euler_traj.npy")
     list_of_pose = make_req(data)
     invalid_index,valid_pose = trak_ik(list_of_pose)
     invalid_traj = []
